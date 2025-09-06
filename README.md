@@ -1,104 +1,115 @@
-# 📝 Desafio Técnico – RPA 
+# Automação de Cadastro de Clientes
 
-##  Objetivo
+Este é um script de automação em Python projetado para ler dados de
+clientes de um arquivo CSV, validá-los, preencher um formulário web
+local com os dados válidos, registrar os resultados em um banco de dados
+SQLite e enviar um e-mail de boas-vindas para cada cliente cadastrado
+com sucesso.
 
-Criar uma automação que processe uma planilha de novos clientes, valide os dados e realize:
+## Funcionalidades
 
-1. Cadastro automático em um sistema web (formulário de exemplo).
-2. Validação de CPF e e-mail.
-3. Envio de e-mail de boas-vindas.
-4. Registro dos clientes em um banco de dados ou planilha de histórico.
+- **Leitura de Dados**: Lê informações de clientes a partir de um
+  > arquivo dados.csv.
 
-O candidato pode usar **Python, Make ou n8n** – a escolha é livre.
+- **Validação de Dados**: Valida os formatos de CPF e e-mail para
+  > garantir a integridade dos dados.
 
----
+- **Log de Erros**: Registros com dados inválidos são separados e salvos
+  > em logs_erros.csv.
 
-## 📂 Entrada
+- **Automação Web**: Utiliza o Selenium para abrir um formulário HTML
+  > local (form.html), preencher os campos e submeter o cadastro.
 
-O processo receberá diariamente uma planilha Excel com as seguintes colunas:
+- **Persistência de Dados**: Cria e utiliza um banco de dados SQLite
+  > (cadastro.db) para armazenar o status de cada tentativa de cadastro
+  > (sucesso ou falha).
 
-* Nome
-* CPF
-* E-mail
-* Telefone
-* Data de Nascimento
+- **Notificação por E-mail**: Envia um e-mail de boas-vindas para os
+  > clientes cadastrados com sucesso usando o servidor SMTP do Gmail.
 
-Exemplo:
+## Pré-requisitos
 
-| Nome           | CPF         | E-mail                                    | Telefone    | Data de Nascimento |
-| -------------- | ----------- | ----------------------------------------- | ----------- | ------------------ |
-| João Silva     | 12345678901 | [joao@email.com](mailto:joao@email.com)   | 11999999999 | 1990-01-01         |
-| Maria Oliveira | 98765432100 | [maria@email.com](mailto:maria@email.com) | 21988887777 | 1985-05-12         |
+Antes de executar o script, você precisará ter o seguinte instalado:
 
----
+- [[Python 3.x]{.underline}](https://www.python.org/downloads/)
 
-## 🚀 Tarefas
+- O navegador [[Google
+  > Chrome]{.underline}](https://www.google.com/chrome/)
 
-1. **Leitura da planilha**
+- [[ChromeDriver]{.underline}](https://googlechromelabs.github.io/chrome-for-testing/)
+  > compatível com a sua versão do Google Chrome. Certifique-se de que o
+  > executável do ChromeDriver esteja no PATH do seu sistema ou no mesmo
+  > diretório do script.
 
-   * Ler todos os registros do arquivo.
+## Instalação
 
-2. **Validação**
+1.  Clone este repositório ou baixe os arquivos para o seu computador.
 
-   * Validar se o CPF está no formato correto (11 dígitos numéricos).
-   * Validar se o e-mail segue formato válido.
-   * Registrar em um **log de erros** os cadastros inválidos.
+2.  Navegue até o diretório do projeto e instale as dependências Python
+    > necessárias:  
+    > pip install pandas selenium schedule
 
-3. **Cadastro automático (RPA)**
+## Configuração
 
-   * Preencher os campos do formulário de cadastro em um sistema web (pode ser simulado com qualquer página de exemplo, como um formulário de teste).
+Antes de executar o script, você **precisa** configurar alguns caminhos
+e credenciais diretamente no código:
 
-4. **Notificação por e-mail**
+1.  **Caminho do CSV de Entrada**: Na linha 16, atualize o caminho para
+    > o seu arquivo dados.csv.  
+    > df = pd.read_csv(  
+    > r\"C:\caminho\completo\para\seus\dados.csv\",  
+    > \# \...  
+    > )
 
-   * Enviar mensagem de boas-vindas para cada cliente válido.
+2.  **Caminho do Formulário HTML**: Na linha 101, atualize o caminho
+    > para o seu arquivo form.html.  
+    > driver.get(\"C:/caminho/completo/para/seu/form.html\")
 
-5. **Registro no histórico**
+3.  **Credenciais de E-mail**: Na função enviar_email, insira o e-mail
+    > do remetente e a senha.  
+    > def enviar_email(nome, email):  
+    > remetente = \"seu-email@gmail.com\" \# SEU E-MAIL AQUI  
+    > senha = \"SUA_SENHA_DE_APP_AQUI\" \# SUA SENHA AQUI  
+    > \# \...  
+    > **⚠️ Aviso de Segurança**: Para usar uma conta do Gmail, é
+    > altamente recomendável gerar uma **\"Senha de App\"** em vez de
+    > usar sua senha principal. Para isso, ative a verificação em duas
+    > etapas na sua Conta Google e depois gere a senha em [[Senhas de
+    > app]{.underline}](https://myaccount.google.com/apppasswords).
 
-   * Salvar os dados processados em um banco (MySQL/Postgres/SQLite) ou em uma planilha Google Sheets.
+## Estrutura do dados.csv {#estrutura-do-dados.csv}
 
----
+O arquivo dados.csv deve ter um separador de ponto e vírgula (;) e
+conter as seguintes colunas:
 
-## ⭐ Pontos Extras (Opcional)
+- NOME COMPLETO
 
-* Agendamento automático (ex: rodar todos os dias às 9h).
-* Dashboard simples com indicadores:
+- CPF
 
-  * Cadastros realizados com sucesso.
-  * Cadastros que falharam.
-* Uso de boas práticas de código (em Python) ou fluxos bem documentados (em Make/n8n).
+- E-MAIL
 
----
+- TelefoneContato
 
-## 📦 Entregáveis
+- Nascimento
 
-O candidato deve entregar:
+## Como Executar
 
-* Código-fonte ou fluxo exportado (Make/n8n).
-* Instruções de execução (README).
-* Print/tela do processo funcionando.
-* Arquivo de log de erros (se houver).
+Após concluir a instalação e a configuração, basta executar o script a
+partir do seu terminal:
 
----
+python nome_do_script.py
 
-## 🕐 Tempo Estimado
+*(Substitua nome_do_script.py pelo nome real do seu arquivo Python)*
 
-**4 a 6 horas** (pode ser entregue em até 2 dias).
+O script iniciará o processo, exibindo o status de cada cliente no
+console.
 
----
+## Arquivos Gerados
 
-## 🏆 Critérios de Avaliação
+- **logs_erros.csv**: Contém os registros do dados.csv que falharam na
+  > validação inicial de CPF ou e-mail. Erros de cadastro durante a
+  > automação também são anexados a este arquivo.
 
-1. **Funcionalidade (40%)** – Se o fluxo atende aos requisitos obrigatórios.
-2. **Qualidade técnica (30%)** – Organização do código/fluxo, tratamento de erros e boas práticas.
-3. **Clareza (20%)** – Documentação e facilidade de entender/executar a solução.
-4. **Extras (10%)** – Dashboard, agendamento e melhorias além do pedido.
-
-📁 Arquivos Disponíveis
-
-Na raiz deste repositório você encontrará:
-
-form.html → página com o formulário de cadastro que simula o sistema web.
-Abra no navegador (duplo clique) para usar como ambiente de testes.
-
-dados.csv → arquivo de entrada com dados inconsistentes.
-Este é o arquivo que sua automação deve processar, limpar/validar e tentar cadastrar no formulário.
+- **cadastro.db**: Banco de dados SQLite que armazena todos os clientes
+  > processados e seu status final (Deu bom! para sucesso ou a mensagem
+  > de erro para falhas).
