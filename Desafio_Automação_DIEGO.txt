@@ -1,0 +1,185 @@
+from idlelib.run import Executive
+from operator import index
+from selenium.webdriver.support import expected_conditions as EC
+import pandas as pd
+import re
+import sqlite3
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+import time
+import smtplib
+from email.mime.text import MIMEText
+import schedule
+from selenium.webdriver.support.wait import WebDriverWait
+
+df = pd.read_csv(
+    r"C:\Users\d-deb\PycharmProjects\pythonProject\desafiotec\desafiodiegoautomation\dados.csv",
+    sep=";",   # força pandas a entender que separador é ponto e vírgula
+    encoding="utf-8"
+)
+
+def validar_cpf(cpf: str) -> bool:
+    return cpf.isdigit() and len(cpf) == 11
+
+def validar_email(email: str) -> bool:
+    padrao = r"^[\w\.-]+@[\w\.-]+\.\w+$"
+    return re.match(padrao, email) is not None
+
+def esperar_por_nome(driver, nome, tempo=5):
+    try:
+        return WebDriverWait(driver, tempo).until(EC.element_to_be_clickable((By.NAME, nome)))
+    except Exception as e:
+        print(f"Elemento não encontrado: {e}")
+        return None
+
+def esperar_por_id(driver, elemento_id, tempo=5):
+    try:
+        return WebDriverWait(driver, tempo).until(EC.element_to_be_clickable((By.ID, elemento_id)))
+    except Exception as e:
+        print(f"Elemento não encontrado: {e}")
+        return None
+
+def esperar_por_seletor(driver, seletor, tempo=5):
+    try:
+        return WebDriverWait(driver, tempo).until(EC.element_to_be_clickable((By.CSS_SELECTOR, seletor)))
+    except Exception as e:
+        print(f"Elemento não encontrado: {e}")
+        return None
+
+validos = []
+invalidos = []
+
+for _, linha in df.iterrows():
+    cpf = str(linha["CPF"]).strip()
+    email = str(linha["E-MAIL"]).strip()
+
+    if validar_cpf(cpf) and validar_email(email):
+        validos.append(linha)
+    else:
+        invalidos.append(linha)
+df_validos = pd.DataFrame(validos)
+df_invalidos = pd.DataFrame(invalidos)
+
+df_invalidos.to_csv("logs_erros.csv",index=False)
+print("Registros validos> ", len(df_validos))
+print("Registros invalidos: ", len(df_invalidos))
+
+
+con = sqlite3.connect("cadastro.db")
+cursor = con.cursor()
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS clientes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT,
+    cpf TEXT,
+    email TEXT,
+    telefone TEXT,
+    nascimento TEXT,
+    status TEXT
+)
+""")
+con.commit()
+print("banco de dados e tabelas prontos.")
+
+
+
+def cadastrar_cliente(nome, cpf, email, telefone,nascimento):
+    driver = webdriver.Chrome()
+    driver.get("C:/Users/d-deb/PycharmProjects/pythonProject/desafiotec/desafiodiegoautomation/form.html")
+
+    try:
+
+        campo_nome = esperar_por_id(driver, "nome")
+        if not campo_nome:
+            print(driver.page_source)  # imprime o HTML da página inteira
+            raise Exception("Campo NOME não encontrado!")
+        campo_cpf = esperar_por_nome(driver, "cpf")
+        campo_cpf.send_keys(cpf)
+
+        campo_email = esperar_por_id(driver, "email")
+        campo_email.send_keys(email)
+
+        campo_telefone = esperar_por_id(driver, "telefone")
+        campo_telefone.send_keys(str(telefone))
+
+        campo_nascimento = esperar_por_id(driver, "nascimento")
+        campo_nascimento.send_keys(str(nascimento))
+
+        botao_enviar = esperar_por_seletor(driver, "cadastroForm > div.actions > button:nth-child(1)")
+        if botao_enviar:
+            botao_enviar.click()
+            print("Botão enviar clicado!")
+
+        botao_download = esperar_por_id(driver, "downloadCsv")
+        if botao_download:
+            botao_download.click()
+            print("Histórico baixado!")
+        # -------------------------------------------------------------
+
+        sql = "INSERT INTO clientes (nome, cpf, email, telefone, nascimento, status) VALUES (?, ?, ?, ?, ?, ?)"
+        dados = (nome, cpf, email, telefone, nascimento,"Deu bom!")
+        cursor.execute(sql,dados)
+        con.commit()
+        print("OK!", {nome})
+
+    except Exception as e:
+        status_erro = f"falha no cadastro: {e} "
+        cursor.execute("INSERT INTO clientes (nome, cpf, email, TelefoneContato, nascimento, status) VALUES (?, ?, ?, ?, ?, ?)",
+                       (nome, cpf, email,telefone, nascimento, status_erro))
+        con.commit()
+        print(f"Erro cadastro:{nome}, Log erro: {e}")
+
+        with open("logs_erros.csv", "a", encoding="utf-8") as log:
+            log.write(f"{nome} | {cpf} | {email} | ERRO: {e}\n")
+
+        print(f"Falha no cadastro! Erro: {e}")
+
+    finally:
+        time.sleep(3)
+        driver.quit()
+
+
+def enviar_email(nome,email):
+    remetente = "debrito521@gmail.com"
+    senha = ""
+    destinatario = email
+
+    assunto = "Bem-vindo ao cadastro de clientes!"
+    corpo = f"Olá {nome}, seja bem-vindo ao nosso sistema!"
+
+    # Criamos a mensagem de e-mail
+    msg = MIMEText(corpo)
+    msg["Subject"] = assunto
+    msg["From"] = remetente
+    msg["To"] = destinatario
+
+    try:
+        with smtplib.SMTP("smtp.gmail.com", port=587) as servidor:
+            servidor.starttls()
+            servidor.login(remetente, senha)
+            servidor.sendmail(remetente, destinatario, msg.as_string())
+            print(f"email enviado: {nome} -> {email}")
+    except Exception as e:
+        print(f"error ao enviar email: {email}: {e}")
+
+
+def executar():
+    print("INICANDO AUTOMAÇÂO!")
+    for _ , linha in df_validos.iterrows():
+        nome = linha["NOME COMPLETO"]
+        cpf = str(linha["CPF"])
+        email = linha["E-MAIL"]
+        telefone = linha["TelefoneContato"]
+        nascimento = linha["Nascimento"]
+
+
+        print(f"Processando cliente: {nome}")
+        cadastrar_cliente(nome, cpf, email,telefone,nascimento)
+        enviar_email(nome, email)
+
+if __name__ == "__main__":
+    executar()
+    con.close() # Fecha a conexão com o banco ao final.
+    print("\nProcesso finalizado.")

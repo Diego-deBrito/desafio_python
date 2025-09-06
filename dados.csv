@@ -1,0 +1,15 @@
+NOME COMPLETO;CPF;E-MAIL;TelefoneContato;Nascimento;coluna_extra
+João Silva;12345678901;joao@email.com;11999999999;01/01/1990;irrelevante
+Maria Oliveira;98765432100;maria@email.com;21988887777;12/05/1985;
+Carlos Demo;11122233344;carlos.invalido;21977776666;07/07/1992;teste
+Ana Souza;999999;ana@;telefone_invalido;31/12/1980;
+Pedro Lima;abc12345678;pedro.lima@teste;;;
+Fernanda Costa;12345678;fernanda@@mail.com;11-98888-9999;15/07/1988;extra
+Rafael Martins;1,23E+11;rafaelmartins.com;219123456;15/03/1995;
+Clara Gomes;0;clara@email.;1,00E+12;30/11/1993;teste
+Lucas Pereira;12345abc890;lucas@teste;21-9999-8888;12/05/1999;
+Paula Mendes;44455566677;paula.mendes@mail.com;21888887777;85-12-25;
+Tiago Rocha;987654321;tiago@rocha;219777766;1992-30-07;irrelevante
+Mariana Lima;13579246810;mariana@mail;abc123;1991-06-31;teste
+Carlos Alberto;;carlos.alberto@mail.com;21999995555;not_a_date;extra
+Juliana Souza;24681357902;juliana.souza@mail.com;2133334444;12-31-1987;
